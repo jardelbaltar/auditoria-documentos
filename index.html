@@ -22,6 +22,8 @@
       --border: rgba(149, 174, 220, 0.3);
       --chip-bg: rgba(109, 143, 211, 0.2);
       --chip-text: #d7e3fb;
+      --chip-value-bg: rgba(34, 211, 238, 0.18);
+      --chip-value-text: #67e8f9;
       --ins-bg: #d9f3e6;
       --ins-text: #1f5139;
       --del-bg: #f9d9df;
@@ -43,6 +45,8 @@
       --border: rgba(100, 116, 139, 0.35);
       --chip-bg: rgba(90, 127, 200, 0.14);
       --chip-text: #2f4775;
+      --chip-value-bg: rgba(90, 127, 200, 0.2);
+      --chip-value-text: #1f365f;
       --primary-soft: rgba(90, 127, 200, 0.16);
       --ins-bg: #d9f3e6;
       --ins-text: #1f5139;
@@ -189,11 +193,11 @@
       white-space: nowrap;
     }
     .chip .value {
-      background: rgba(34, 211, 238, 0.18);
+      background: var(--chip-value-bg);
       border-radius: 999px;
       padding: 1px 6px;
       font-weight: 700;
-      color: #67e8f9;
+      color: var(--chip-value-text);
     }
     .chip-wrap {
       display: flex;
