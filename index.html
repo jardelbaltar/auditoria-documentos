@@ -116,6 +116,12 @@
     button.primary:hover { filter: brightness(1.04); }
     button.ghost:hover { background: #f8fafc; }
 
+    .tour-launch {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     .list {
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -327,6 +333,46 @@
     .ins { background: #dcfce7; color: #065f46; padding: 1px 3px; border-radius: 4px; }
     .del { background: #fee2e2; color: #7f1d1d; text-decoration: line-through; padding: 1px 3px; border-radius: 4px; }
 
+    .tutorial-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.52);
+      z-index: 999;
+    }
+
+    .tutorial-overlay.hidden,
+    .tutorial-tooltip.hidden { display: none; }
+
+    .tutorial-highlight {
+      position: relative;
+      z-index: 1001 !important;
+      outline: 3px solid #f59e0b;
+      border-radius: 10px;
+      box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.22);
+      scroll-margin: 24px;
+    }
+
+    .tutorial-tooltip {
+      position: fixed;
+      max-width: 340px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 16px 36px rgba(2, 6, 23, 0.2);
+      padding: 12px;
+      z-index: 1002;
+    }
+
+    .tutorial-tooltip h4 { font-size: 0.92rem; margin-bottom: 6px; }
+    .tutorial-tooltip p { font-size: 0.82rem; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
+    .tutorial-progress { font-size: 0.74rem; color: var(--muted); margin-bottom: 8px; }
+    .tutorial-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .tutorial-actions button { flex: 1; }
+
     @media (max-width: 1160px) {
       .app { grid-template-columns: 1fr; }
       .left, .right { min-height: auto; }
@@ -383,7 +429,10 @@
             <h2 id="headerTitle">Selecione um processo e documento</h2>
             <div id="headerSub" class="muted">Acompanhe timeline, permissões, acessos e versões</div>
           </div>
-          <button id="exportBtn" class="ghost">Exportar auditoria (.md)</button>
+          <div class="row">
+            <button id="tutorialBtn" class="ghost tour-launch">✨ Tutorial guiado</button>
+            <button id="exportBtn" class="ghost">Exportar auditoria (.md)</button>
+          </div>
         </div>
 
         <div id="stats" class="chip-wrap"></div>
@@ -468,6 +517,18 @@
       </section>
     </div>
   </main>
+</div>
+
+<div id="tutorialOverlay" class="tutorial-overlay hidden"></div>
+<div id="tutorialTooltip" class="tutorial-tooltip hidden">
+  <div id="tutorialProgress" class="tutorial-progress"></div>
+  <h4 id="tutorialTitle"></h4>
+  <p id="tutorialText"></p>
+  <div class="tutorial-actions">
+    <button id="tutorialPrev" class="ghost">Anterior</button>
+    <button id="tutorialNext" class="primary">Próximo</button>
+    <button id="tutorialClose" class="ghost">Fechar</button>
+  </div>
 </div>
 
 <script>
@@ -566,9 +627,65 @@ const docTypeFilter = document.getElementById("docTypeFilter");
 const leftPreviewVersion = document.getElementById("leftPreviewVersion");
 const leftPreviewMeta = document.getElementById("leftPreviewMeta");
 const leftDocPreview = document.getElementById("leftDocPreview");
+const tutorialOverlay = document.getElementById("tutorialOverlay");
+const tutorialTooltip = document.getElementById("tutorialTooltip");
 let selectedProcess = null;
 let selectedDocument = null;
 let selectedVersionId = null;
+let tutorialIndex = -1;
+let highlightedEl = null;
+
+const tutorialSteps = [
+  {
+    selector: "#processSearch",
+    title: "1) Pesquisa do processo",
+    text: "Comece digitando o número do processo. Em seguida, clique em 'Buscar processo' para carregar os resultados da consulta.",
+    onEnter: () => {
+      document.getElementById("processSearch").value = "0001234";
+    }
+  },
+  {
+    selector: "#processList",
+    title: "2) Lista de resultados",
+    text: "Aqui aparecem os processos encontrados. Clique em um item para habilitar os documentos vinculados no painel à esquerda."
+  },
+  {
+    selector: "#docTypeFilter",
+    title: "3) Filtro por tipo",
+    text: "Use este filtro para mostrar apenas Decisão, Despacho ou Voto, facilitando a auditoria por categoria documental."
+  },
+  {
+    selector: "#documentList",
+    title: "4) Documentos do processo",
+    text: "Selecione um documento para carregar timeline, permissões, logs e versões comparáveis no painel principal.",
+    onEnter: () => ensureDemoSelection()
+  },
+  {
+    selector: "#timeline",
+    title: "5) Timeline do documento",
+    text: "A timeline mostra os eventos cronológicos. Os botões 'Abrir vX' permitem abrir rapidamente a versão relacionada a cada evento.",
+    onEnter: () => {
+      document.querySelectorAll("details.section").forEach((detail, idx) => {
+        if (idx === 0) detail.open = true;
+      });
+    }
+  },
+  {
+    selector: "#leftDocPreview",
+    title: "6) Visualização da versão",
+    text: "Este quadro exibe o conteúdo da versão ativa. Ao clicar em um item da timeline, o texto é atualizado aqui."
+  },
+  {
+    selector: "#compareBtn",
+    title: "7) Comparar versões",
+    text: "Escolha duas versões nos seletores e clique em 'Comparar versões' para ver trechos inseridos e removidos lado a lado."
+  },
+  {
+    selector: "#exportBtn",
+    title: "8) Exportar auditoria",
+    text: "Quando finalizar a análise, exporte um relatório .md com processo, timeline, permissões, logs e versões."
+  }
+];
 
 function renderProcesses(filtered = data.processes) {
   processList.innerHTML = "";
@@ -792,6 +909,93 @@ document.getElementById("searchBtn").onclick = () => {
 docTypeFilter.onchange = renderDocuments;
 document.getElementById("compareBtn").onclick = compareSelected;
 document.getElementById("exportBtn").onclick = exportAudit;
+document.getElementById("tutorialBtn").onclick = startTutorial;
+document.getElementById("tutorialPrev").onclick = prevTutorialStep;
+document.getElementById("tutorialNext").onclick = nextTutorialStep;
+document.getElementById("tutorialClose").onclick = stopTutorial;
+window.addEventListener("resize", () => {
+  if (tutorialIndex >= 0) showTutorialStep(tutorialIndex);
+});
+
+function ensureDemoSelection() {
+  if (!data.processes.length) return;
+  selectedProcess = data.processes[0];
+  renderProcesses();
+  renderDocuments();
+  selectedDocument = selectedProcess.documents[0];
+  renderDocuments();
+  renderRight();
+}
+
+function clearTutorialHighlight() {
+  if (highlightedEl) highlightedEl.classList.remove("tutorial-highlight");
+  highlightedEl = null;
+}
+
+function startTutorial() {
+  tutorialOverlay.classList.remove("hidden");
+  tutorialTooltip.classList.remove("hidden");
+  showTutorialStep(0);
+}
+
+function stopTutorial() {
+  tutorialIndex = -1;
+  tutorialOverlay.classList.add("hidden");
+  tutorialTooltip.classList.add("hidden");
+  clearTutorialHighlight();
+}
+
+function prevTutorialStep() {
+  if (tutorialIndex <= 0) return;
+  showTutorialStep(tutorialIndex - 1);
+}
+
+function nextTutorialStep() {
+  if (tutorialIndex >= tutorialSteps.length - 1) {
+    stopTutorial();
+    return;
+  }
+  showTutorialStep(tutorialIndex + 1);
+}
+
+function showTutorialStep(index) {
+  tutorialIndex = index;
+  const step = tutorialSteps[index];
+  if (!step) return;
+  if (step.onEnter) step.onEnter();
+
+  clearTutorialHighlight();
+  const element = document.querySelector(step.selector);
+  if (!element) return;
+  highlightedEl = element;
+  element.classList.add("tutorial-highlight");
+  element.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+
+  document.getElementById("tutorialProgress").textContent = `Passo ${index + 1} de ${tutorialSteps.length}`;
+  document.getElementById("tutorialTitle").textContent = step.title;
+  document.getElementById("tutorialText").textContent = step.text;
+  document.getElementById("tutorialPrev").disabled = index === 0;
+  document.getElementById("tutorialNext").textContent = index === tutorialSteps.length - 1 ? "Finalizar" : "Próximo";
+
+  const rect = element.getBoundingClientRect();
+  const tooltipRect = tutorialTooltip.getBoundingClientRect();
+  const margin = 12;
+
+  let top = rect.bottom + margin;
+  if (top + tooltipRect.height > window.innerHeight - margin) {
+    top = rect.top - tooltipRect.height - margin;
+  }
+  top = Math.max(margin, top);
+
+  let left = rect.left;
+  if (left + tooltipRect.width > window.innerWidth - margin) {
+    left = window.innerWidth - tooltipRect.width - margin;
+  }
+  left = Math.max(margin, left);
+
+  tutorialTooltip.style.top = `${top}px`;
+  tutorialTooltip.style.left = `${left}px`;
+}
 
 clearPreview();
 renderProcesses();
