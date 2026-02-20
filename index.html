@@ -55,6 +55,24 @@
       min-height: calc(100vh - 28px);
     }
 
+    .right-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(240px, 1fr);
+      gap: 10px;
+      align-items: start;
+    }
+
+    .current-version {
+      position: sticky;
+      top: 0;
+      min-height: calc((100vh - 56px) / 2);
+      max-height: calc(100vh - 56px);
+    }
+
+    .current-version .doc-html {
+      min-height: 220px;
+    }
+
     .title-block h1 { font-size: 1.08rem; }
     .title-block .muted { font-size: 0.84rem; margin-top: 2px; }
 
@@ -271,6 +289,12 @@
       .left, .right { min-height: auto; }
       .preview-panel { min-height: 220px; }
       .grid { grid-template-columns: 1fr; }
+      .right-layout { grid-template-columns: 1fr; }
+      .current-version {
+        position: static;
+        min-height: auto;
+        max-height: none;
+      }
       .full-width { grid-column: auto; }
     }
   </style>
@@ -309,83 +333,88 @@
       <div id="documentList" class="list"></div>
     </div>
 
-    <section class="preview-panel">
-      <div class="preview-head">
-        <h3>Última versão do documento</h3>
-        <span id="leftPreviewVersion" class="chip">sem versão</span>
-      </div>
-      <div id="leftPreviewMeta" class="preview-meta">Selecione um documento para visualizar o conteúdo.</div>
-      <div id="leftDocPreview" class="doc-html"></div>
-    </section>
   </aside>
 
   <main class="panel right">
-    <div class="topbar">
+    <div class="right-layout">
       <div>
-        <h2 id="headerTitle">Selecione um processo e documento</h2>
-        <div id="headerSub" class="muted">Acompanhe timeline, permissões, acessos e versões</div>
+        <div class="topbar">
+          <div>
+            <h2 id="headerTitle">Selecione um processo e documento</h2>
+            <div id="headerSub" class="muted">Acompanhe timeline, permissões, acessos e versões</div>
+          </div>
+          <button id="exportBtn" class="ghost">Exportar auditoria (.md)</button>
+        </div>
+
+        <div id="stats" class="chip-wrap"></div>
+
+        <div class="grid">
+          <section class="section">
+            <h3>Timeline de situações do documento</h3>
+            <div class="timeline-shell">
+              <div id="timeline" class="timeline"></div>
+            </div>
+          </section>
+
+          <section class="section">
+            <h3>Permissões atuais</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Usuário</th><th>Perfil</th><th>Permissões</th></tr>
+                </thead>
+                <tbody id="permissionsTable"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="section">
+            <h3>Histórico de concessões/revogações</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Data</th><th>Responsável</th><th>Usuário alvo</th><th>Ação</th><th>Permissão</th></tr>
+                </thead>
+                <tbody id="grantHistoryTable"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="section">
+            <h3>Logs de acesso (fora da timeline)</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Data</th><th>Usuário</th><th>Evento</th><th>Detalhe</th></tr>
+                </thead>
+                <tbody id="accessLogsTable"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="section full-width">
+            <h3>Comparação entre duas versões</h3>
+            <div class="row" style="margin-bottom: 8px; flex-wrap: wrap;">
+              <select id="compareA"></select>
+              <select id="compareB"></select>
+              <button id="compareBtn" class="primary">Comparar versões</button>
+            </div>
+            <div class="legend">Legenda: <span class="ins">inserido</span> <span class="del">removido</span></div>
+            <div class="compare-grid">
+              <div class="diff-box" id="compareLeft"></div>
+              <div class="diff-box" id="compareRight"></div>
+            </div>
+          </section>
+        </div>
       </div>
-      <button id="exportBtn" class="ghost">Exportar auditoria (.md)</button>
-    </div>
 
-    <div id="stats" class="chip-wrap"></div>
-
-    <div class="grid">
-      <section class="section">
-        <h3>Timeline de situações do documento</h3>
-        <div class="timeline-shell">
-          <div id="timeline" class="timeline"></div>
+      <section class="preview-panel current-version">
+        <div class="preview-head">
+          <h3>Última versão do documento</h3>
+          <span id="leftPreviewVersion" class="chip">sem versão</span>
         </div>
-      </section>
-
-      <section class="section">
-        <h3>Permissões atuais</h3>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Usuário</th><th>Perfil</th><th>Permissões</th></tr>
-            </thead>
-            <tbody id="permissionsTable"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="section">
-        <h3>Histórico de concessões/revogações</h3>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Data</th><th>Responsável</th><th>Usuário alvo</th><th>Ação</th><th>Permissão</th></tr>
-            </thead>
-            <tbody id="grantHistoryTable"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="section">
-        <h3>Logs de acesso (fora da timeline)</h3>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Data</th><th>Usuário</th><th>Evento</th><th>Detalhe</th></tr>
-            </thead>
-            <tbody id="accessLogsTable"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="section full-width">
-        <h3>Comparação entre duas versões</h3>
-        <div class="row" style="margin-bottom: 8px; flex-wrap: wrap;">
-          <select id="compareA"></select>
-          <select id="compareB"></select>
-          <button id="compareBtn" class="primary">Comparar versões</button>
-        </div>
-        <div class="legend">Legenda: <span class="ins">inserido</span> <span class="del">removido</span></div>
-        <div class="compare-grid">
-          <div class="diff-box" id="compareLeft"></div>
-          <div class="diff-box" id="compareRight"></div>
-        </div>
+        <div id="leftPreviewMeta" class="preview-meta">Selecione um documento para visualizar o conteúdo.</div>
+        <div id="leftDocPreview" class="doc-html"></div>
       </section>
     </div>
   </main>
