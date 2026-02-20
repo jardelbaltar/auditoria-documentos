@@ -10,6 +10,11 @@
       --panel: rgba(12, 24, 46, 0.88);
       --text: #e2ecff;
       --muted: #95a3bd;
+      --surface-1: rgba(9, 19, 37, 0.75);
+      --surface-2: rgba(9, 18, 35, 0.9);
+      --surface-3: rgba(8, 17, 33, 0.74);
+      --surface-4: rgba(5, 10, 20, 0.7);
+      --table-head: rgba(11, 23, 44, 0.98);
       --primary: #26c6ff;
       --primary-soft: rgba(38, 198, 255, 0.15);
       --secondary: #a855f7;
@@ -19,6 +24,23 @@
       --chip-text: #e9d5ff;
       --shadow: 0 14px 32px rgba(1, 6, 20, 0.45);
       --radius: 14px;
+    }
+
+    :root[data-theme="light"] {
+      --bg: radial-gradient(circle at 15% 10%, #f7fbff 0%, #e8f0ff 45%, #dbe7ff 100%);
+      --panel: rgba(255, 255, 255, 0.88);
+      --text: #0f172a;
+      --muted: #475569;
+      --surface-1: rgba(255, 255, 255, 0.78);
+      --surface-2: rgba(255, 255, 255, 0.96);
+      --surface-3: rgba(255, 255, 255, 0.92);
+      --surface-4: rgba(255, 255, 255, 0.85);
+      --table-head: rgba(240, 247, 255, 0.98);
+      --border: rgba(71, 112, 204, 0.28);
+      --chip-bg: rgba(147, 51, 234, 0.12);
+      --chip-text: #6b21a8;
+      --primary-soft: rgba(37, 99, 235, 0.12);
+      --shadow: 0 14px 32px rgba(15, 23, 42, 0.16);
     }
     * { box-sizing: border-box; }
     body {
@@ -103,7 +125,7 @@
       border-radius: 9px;
       padding: 8px 10px;
       font-size: 0.85rem;
-      background: rgba(9, 18, 35, 0.9);
+      background: var(--surface-2);
       color: var(--text);
     }
     .input, select { width: 100%; }
@@ -131,7 +153,7 @@
       border-radius: 10px;
       max-height: 132px;
       overflow: auto;
-      background: rgba(8, 17, 33, 0.74);
+      background: var(--surface-3);
     }
     .list-item {
       padding: 8px 10px;
@@ -195,7 +217,7 @@
       border-radius: 10px;
       padding: 10px;
       overflow: auto;
-      background: rgba(5, 10, 20, 0.7);
+      background: var(--surface-4);
       font-size: 0.85rem;
       line-height: 1.35;
       height: 100%;
@@ -217,7 +239,7 @@
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 10px;
-      background: rgba(9, 19, 37, 0.75);
+      background: var(--surface-1);
       min-height: 0;
     }
     .section h3 { font-size: 0.88rem; margin-bottom: 8px; }
@@ -294,7 +316,7 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 0.8rem;
-      background: rgba(9, 19, 37, 0.75);
+      background: var(--surface-1);
     }
     th, td {
       border-bottom: 1px solid var(--border);
@@ -309,7 +331,7 @@
       font-weight: 600;
       position: sticky;
       top: 0;
-      background: rgba(11, 23, 44, 0.98);
+      background: var(--table-head);
     }
     tr:last-child td { border-bottom: none; }
 
@@ -360,7 +382,7 @@
     .tutorial-tooltip {
       position: fixed;
       max-width: 340px;
-      background: rgba(7, 15, 31, 0.95);
+      background: var(--surface-2);
       border: 1px solid var(--border);
       border-radius: 12px;
       box-shadow: 0 16px 36px rgba(2, 6, 23, 0.2);
@@ -435,6 +457,7 @@
             <div id="headerSub" class="muted">Acompanhe timeline, permissões, acessos e versões</div>
           </div>
           <div class="row">
+            <button id="themeBtn" class="ghost" title="Alternar tema">🌙 Tema escuro</button>
             <button id="tutorialBtn" class="ghost tour-launch">✨ Tutorial guiado</button>
             <button id="exportBtn" class="ghost">Exportar auditoria (.md)</button>
           </div>
@@ -634,11 +657,33 @@ const leftPreviewMeta = document.getElementById("leftPreviewMeta");
 const leftDocPreview = document.getElementById("leftDocPreview");
 const tutorialOverlay = document.getElementById("tutorialOverlay");
 const tutorialTooltip = document.getElementById("tutorialTooltip");
+const themeBtn = document.getElementById("themeBtn");
+const THEME_STORAGE_KEY = "auditoria-theme";
 let selectedProcess = null;
 let selectedDocument = null;
 let selectedVersionId = null;
 let tutorialIndex = -1;
 let highlightedEl = null;
+
+
+function applyTheme(theme) {
+  const resolvedTheme = theme === "light" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", resolvedTheme);
+  themeBtn.textContent = resolvedTheme === "dark" ? "🌙 Tema escuro" : "☀️ Tema claro";
+}
+
+function initTheme() {
+  const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+  const systemPrefersLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+  applyTheme(storedTheme || (systemPrefersLight ? "light" : "dark"));
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute("data-theme") || "dark";
+  const next = current === "dark" ? "light" : "dark";
+  applyTheme(next);
+  localStorage.setItem(THEME_STORAGE_KEY, next);
+}
 
 const tutorialSteps = [
   {
@@ -915,6 +960,7 @@ docTypeFilter.onchange = renderDocuments;
 document.getElementById("compareBtn").onclick = compareSelected;
 document.getElementById("exportBtn").onclick = exportAudit;
 document.getElementById("tutorialBtn").onclick = startTutorial;
+themeBtn.onclick = toggleTheme;
 document.getElementById("tutorialPrev").onclick = prevTutorialStep;
 document.getElementById("tutorialNext").onclick = nextTutorialStep;
 document.getElementById("tutorialClose").onclick = stopTutorial;
@@ -1003,6 +1049,7 @@ function showTutorialStep(index) {
 }
 
 clearPreview();
+initTheme();
 renderProcesses();
 </script>
 </body>
