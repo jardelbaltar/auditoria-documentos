@@ -1,1 +1,634 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Protótipo de Auditoria de Documentos</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #1f4f8f;
+      --primary-soft: #e8f0fb;
+      --border: #e5e7eb;
+      --ok: #0f766e;
+      --warn: #a16207;
+      --danger: #b91c1c;
+      --shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+    .app {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      min-height: 100vh;
+      gap: 16px;
+      padding: 16px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .left {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .right {
+      padding: 18px;
+      overflow: auto;
+    }
+    h1,h2,h3 { margin: 0; }
+    h1 { font-size: 1.2rem; }
+    h2 { font-size: 1rem; margin-bottom: 8px; }
+    h3 { font-size: 0.92rem; margin-bottom: 8px; }
+    .muted { color: var(--muted); }
+    .input, select, button {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      background: #fff;
+      color: var(--text);
+    }
+    .input, select { width: 100%; }
+    button {
+      cursor: pointer;
+      transition: .2s ease;
+      font-weight: 600;
+    }
+    button.primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    button.primary:hover { filter: brightness(1.05); }
+    button.ghost:hover { background: #f8fafc; }
+    .row { display: flex; gap: 8px; }
+    .stack { display: flex; flex-direction: column; gap: 8px; }
 
+    .list {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      max-height: 180px;
+      overflow: auto;
+    }
+    .list-item {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .list-item:last-child { border-bottom: none; }
+    .list-item:hover { background: #f8fafc; }
+    .list-item.active {
+      background: var(--primary-soft);
+      border-left: 3px solid var(--primary);
+      padding-left: 9px;
+    }
+    .chip {
+      display: inline-block;
+      padding: 4px 8px;
+      font-size: .75rem;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #3730a3;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      background: #fff;
+    }
+    .card .label { font-size: .78rem; color: var(--muted); }
+    .card .value { font-size: 1.08rem; font-weight: 700; margin-top: 2px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 14px;
+    }
+    .section {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .85rem;
+    }
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { color: var(--muted); font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
+
+    .timeline {
+      border-left: 2px solid #dbeafe;
+      margin-left: 10px;
+      padding-left: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .timeline-item { position: relative; }
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: -19px;
+      top: 6px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+    .timeline-action { font-weight: 600; }
+    .timeline-item button {
+      margin-top: 6px;
+      font-size: .78rem;
+      padding: 6px 8px;
+    }
+
+    .doc-html {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      max-height: 260px;
+      overflow: auto;
+      background: #fcfcfd;
+    }
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .diff-box {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      min-height: 120px;
+      background: #fff;
+      overflow: auto;
+    }
+    .ins { background: #dcfce7; color: #065f46; padding: 1px 3px; border-radius: 4px; }
+    .del { background: #fee2e2; color: #7f1d1d; text-decoration: line-through; padding: 1px 3px; border-radius: 4px; }
+
+    .legend { font-size: .8rem; color: var(--muted); }
+    @media (max-width: 1160px) {
+      .app { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="panel left">
+    <div>
+      <h1>Auditoria de Documentos</h1>
+      <div class="muted">Protótipo com dados mockados</div>
+    </div>
+
+    <div class="stack">
+      <label for="processSearch">Pesquisar processo</label>
+      <input id="processSearch" class="input" placeholder="Ex.: 0001234-56.2025.8.26.0100" />
+      <button id="searchBtn" class="primary">Buscar processo</button>
+    </div>
+
+    <div>
+      <h3>Resultados de processos</h3>
+      <div id="processList" class="list"></div>
+    </div>
+
+    <div class="stack">
+      <label for="docTypeFilter">Filtrar por tipo de documento</label>
+      <select id="docTypeFilter">
+        <option value="todos">Todos</option>
+        <option value="Decisão">Decisão</option>
+        <option value="Despacho">Despacho</option>
+        <option value="Voto">Voto</option>
+      </select>
+    </div>
+
+    <div>
+      <h3>Documentos do processo</h3>
+      <div id="documentList" class="list"></div>
+    </div>
+  </aside>
+
+  <main class="panel right">
+    <div class="topbar">
+      <div>
+        <h2 id="headerTitle">Selecione um processo e documento</h2>
+        <div id="headerSub" class="muted">Acompanhe timeline, permissões, acessos e versões</div>
+      </div>
+      <button id="exportBtn" class="ghost">Exportar auditoria (.md)</button>
+    </div>
+
+    <div id="stats" class="cards"></div>
+
+    <div class="grid">
+      <section class="section">
+        <h3>Timeline de situações do documento</h3>
+        <div id="timeline" class="timeline"></div>
+      </section>
+
+      <section class="section">
+        <h3>Permissões atuais</h3>
+        <table>
+          <thead>
+            <tr><th>Usuário</th><th>Perfil</th><th>Permissões</th></tr>
+          </thead>
+          <tbody id="permissionsTable"></tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h3>Histórico de concessões/revogações</h3>
+        <table>
+          <thead>
+            <tr><th>Data</th><th>Responsável</th><th>Usuário alvo</th><th>Ação</th><th>Permissão</th></tr>
+          </thead>
+          <tbody id="grantHistoryTable"></tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h3>Logs de acesso (fora da timeline)</h3>
+        <table>
+          <thead>
+            <tr><th>Data</th><th>Usuário</th><th>Evento</th><th>Detalhe</th></tr>
+          </thead>
+          <tbody id="accessLogsTable"></tbody>
+        </table>
+      </section>
+
+      <section class="section" style="grid-column: 1 / -1;">
+        <h3>Conteúdo da versão selecionada</h3>
+        <div class="row" style="margin-bottom: 8px;">
+          <select id="versionSelect" style="max-width: 300px;"></select>
+          <button id="loadVersionBtn" class="ghost">Carregar versão</button>
+        </div>
+        <div id="docHtml" class="doc-html"></div>
+      </section>
+
+      <section class="section" style="grid-column: 1 / -1;">
+        <h3>Comparação entre duas versões</h3>
+        <div class="row" style="margin-bottom: 8px;">
+          <select id="compareA"></select>
+          <select id="compareB"></select>
+          <button id="compareBtn" class="primary">Comparar versões</button>
+        </div>
+        <div class="legend">Legenda: <span class="ins">inserido</span> <span class="del">removido</span></div>
+        <div class="compare-grid" style="margin-top: 8px;">
+          <div class="diff-box" id="compareLeft"></div>
+          <div class="diff-box" id="compareRight"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+const data = {
+  processes: [
+    {
+      id: "P1",
+      number: "0001234-56.2025.8.26.0100",
+      class: "Mandado de Segurança",
+      documents: [
+        buildDoc("D1", "Decisão", "Decisão Liminar", "Desembargadora Helena Costa"),
+        buildDoc("D2", "Despacho", "Despacho de Intimação", "Juiz Ricardo Teles")
+      ]
+    },
+    {
+      id: "P2",
+      number: "1009876-11.2024.8.26.0001",
+      class: "Apelação Cível",
+      documents: [
+        buildDoc("D3", "Voto", "Voto do Relator", "Desembargador Paulo Nogueira"),
+        buildDoc("D4", "Decisão", "Decisão de Mérito", "Juíza Marina Freitas")
+      ]
+    },
+    {
+      id: "P3",
+      number: "5023456-88.2023.8.26.0506",
+      class: "Cumprimento de Sentença",
+      documents: [
+        buildDoc("D5", "Despacho", "Despacho de Expedição", "Juiz André Lima")
+      ]
+    }
+  ]
+};
+
+function buildDoc(id, type, title, author) {
+  const base = {
+    id,
+    type,
+    title,
+    author,
+    currentPermissions: [
+      { user: "helena.costa", role: "Magistrado(a)", perms: ["gestão", "leitura", "escrita", "deleção"] },
+      { user: "ana.servidora", role: "Servidor(a)", perms: ["leitura", "escrita"] },
+      { user: "gabinete.revisor", role: "Gabinete", perms: ["leitura"] }
+    ],
+    grantHistory: [
+      { date: "2026-02-12 09:21", actor: "helena.costa", target: "ana.servidora", action: "Concedeu", permission: "escrita" },
+      { date: "2026-02-12 09:22", actor: "helena.costa", target: "gabinete.revisor", action: "Concedeu", permission: "leitura" },
+      { date: "2026-02-13 17:42", actor: "helena.costa", target: "ana.servidora", action: "Revogou", permission: "deleção" }
+    ],
+    accessLogs: [
+      { date: "2026-02-14 08:55", user: "ana.servidora", event: "Visualização", detail: "Acesso via painel de minutas" },
+      { date: "2026-02-14 09:30", user: "gabinete.revisor", event: "Impressão", detail: "Impressão em PDF para revisão" },
+      { date: "2026-02-14 10:12", user: "helena.costa", event: "Visualização", detail: "Consulta antes de assinar" }
+    ],
+    situations: [
+      { date: "2026-02-10 10:05", status: "Criação", user: "ana.servidora", versionId: "v1" },
+      { date: "2026-02-10 14:22", status: "Alteração", user: "ana.servidora", versionId: "v2" },
+      { date: "2026-02-11 11:03", status: "Preparo para assinatura", user: "ana.servidora", versionId: "v2" },
+      { date: "2026-02-11 16:45", status: "Retirado da assinatura", user: "helena.costa", versionId: "v2" },
+      { date: "2026-02-12 09:15", status: "Alteração", user: "helena.costa", versionId: "v3" },
+      { date: "2026-02-12 09:40", status: "Assinado", user: "helena.costa", versionId: "v3" },
+      { date: "2026-02-12 11:10", status: "Enviado para publicação", user: "sistema", versionId: "v3" },
+      { date: "2026-02-13 07:40", status: "Publicado", user: "sistema", versionId: "v3" }
+    ],
+    versions: [
+      {
+        id: "v1",
+        date: "2026-02-10 10:05",
+        user: "ana.servidora",
+        html: `<h2>${title}</h2><p>Vistos. Trata-se de análise inicial do pedido formulado nos autos.</p><p>Defiro a tramitação prioritária.</p>`
+      },
+      {
+        id: "v2",
+        date: "2026-02-10 14:22",
+        user: "ana.servidora",
+        html: `<h2>${title}</h2><p>Vistos. Trata-se de análise inicial do pedido formulado nos autos, com os documentos anexos.</p><p>Defiro a tramitação prioritária e determino intimação da parte contrária.</p>`
+      },
+      {
+        id: "v3",
+        date: "2026-02-12 09:15",
+        user: "helena.costa",
+        html: `<h2>${title}</h2><p>Vistos. Trata-se de análise do pedido formulado nos autos, com documentação suficiente para apreciação.</p><p>Defiro parcialmente o pedido e determino intimação da parte contrária no prazo de 10 dias.</p><p>Publique-se. Intime-se.</p>`
+      }
+    ]
+  };
+
+  if (id === "D3") base.accessLogs.push({ date: "2026-02-15 09:11", user: "secretaria", event: "Visualização", detail: "Conferência para pauta" });
+  if (id === "D4") base.situations.splice(6, 0, { date: "2026-02-12 10:00", status: "Assinatura cancelada", user: "helena.costa", versionId: "v3" });
+  return base;
+}
+
+const processList = document.getElementById("processList");
+const documentList = document.getElementById("documentList");
+const docTypeFilter = document.getElementById("docTypeFilter");
+let selectedProcess = null;
+let selectedDocument = null;
+
+function renderProcesses(filtered = data.processes) {
+  processList.innerHTML = "";
+  filtered.forEach((p) => {
+    const item = document.createElement("div");
+    item.className = "list-item" + (selectedProcess?.id === p.id ? " active" : "");
+    item.innerHTML = `<strong>${p.number}</strong><br><span class="muted">${p.class}</span>`;
+    item.onclick = () => {
+      selectedProcess = p;
+      selectedDocument = null;
+      renderProcesses(filtered);
+      renderDocuments();
+      clearRight();
+    };
+    processList.appendChild(item);
+  });
+  if (!filtered.length) processList.innerHTML = `<div class="list-item muted">Nenhum processo encontrado.</div>`;
+}
+
+function renderDocuments() {
+  documentList.innerHTML = "";
+  if (!selectedProcess) return;
+  const type = docTypeFilter.value;
+  const docs = selectedProcess.documents.filter(d => type === "todos" || d.type === type);
+  docs.forEach((d) => {
+    const item = document.createElement("div");
+    item.className = "list-item" + (selectedDocument?.id === d.id ? " active" : "");
+    item.innerHTML = `<strong>${d.title}</strong><br><span class="chip">${d.type}</span>`;
+    item.onclick = () => {
+      selectedDocument = d;
+      renderDocuments();
+      renderRight();
+    };
+    documentList.appendChild(item);
+  });
+  if (!docs.length) documentList.innerHTML = `<div class="list-item muted">Sem documentos para o filtro selecionado.</div>`;
+}
+
+function clearRight() {
+  document.getElementById("headerTitle").textContent = "Selecione um processo e documento";
+  document.getElementById("headerSub").textContent = "Acompanhe timeline, permissões, acessos e versões";
+  ["stats","timeline","permissionsTable","grantHistoryTable","accessLogsTable","versionSelect","compareA","compareB","docHtml","compareLeft","compareRight"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (["versionSelect","compareA","compareB"].includes(id)) el.innerHTML = "";
+    else el.innerHTML = "";
+  });
+}
+
+function renderRight() {
+  if (!selectedProcess || !selectedDocument) return;
+  const d = selectedDocument;
+  document.getElementById("headerTitle").textContent = `${selectedProcess.number} • ${d.title}`;
+  document.getElementById("headerSub").textContent = `${d.type} | Autor principal: ${d.author}`;
+
+  document.getElementById("stats").innerHTML = `
+    <div class="card"><div class="label">Situações registradas</div><div class="value">${d.situations.length}</div></div>
+    <div class="card"><div class="label">Versões armazenadas</div><div class="value">${d.versions.length}</div></div>
+    <div class="card"><div class="label">Permissões ativas</div><div class="value">${d.currentPermissions.length}</div></div>
+    <div class="card"><div class="label">Logs de acesso</div><div class="value">${d.accessLogs.length}</div></div>
+  `;
+
+  const timeline = document.getElementById("timeline");
+  timeline.innerHTML = "";
+  d.situations.forEach(s => {
+    const item = document.createElement("div");
+    item.className = "timeline-item";
+    item.innerHTML = `<div class="timeline-action">${s.status}</div><div class="muted">${s.date} • ${s.user}</div>`;
+    if (s.versionId) {
+      const btn = document.createElement("button");
+      btn.className = "ghost";
+      btn.textContent = `Abrir ${s.versionId}`;
+      btn.onclick = () => loadVersionById(s.versionId);
+      item.appendChild(btn);
+    }
+    timeline.appendChild(item);
+  });
+
+  document.getElementById("permissionsTable").innerHTML = d.currentPermissions.map(p => `
+    <tr><td>${p.user}</td><td>${p.role}</td><td>${p.perms.join(", ")}</td></tr>
+  `).join("");
+
+  document.getElementById("grantHistoryTable").innerHTML = d.grantHistory.map(g => `
+    <tr><td>${g.date}</td><td>${g.actor}</td><td>${g.target}</td><td>${g.action}</td><td>${g.permission}</td></tr>
+  `).join("");
+
+  document.getElementById("accessLogsTable").innerHTML = d.accessLogs.map(l => `
+    <tr><td>${l.date}</td><td>${l.user}</td><td>${l.event}</td><td>${l.detail}</td></tr>
+  `).join("");
+
+  const options = d.versions.map(v => `<option value="${v.id}">${v.id} • ${v.date} • ${v.user}</option>`).join("");
+  document.getElementById("versionSelect").innerHTML = options;
+  document.getElementById("compareA").innerHTML = options;
+  document.getElementById("compareB").innerHTML = options;
+
+  loadVersionById(d.versions[d.versions.length - 1].id);
+}
+
+function loadVersionById(versionId) {
+  if (!selectedDocument) return;
+  const version = selectedDocument.versions.find(v => v.id === versionId);
+  if (!version) return;
+  document.getElementById("versionSelect").value = versionId;
+  document.getElementById("docHtml").innerHTML = version.html;
+}
+
+function stripHTML(html) {
+  const temp = document.createElement("div");
+  temp.innerHTML = html;
+  return temp.textContent || temp.innerText || "";
+}
+
+function diffWords(oldText, newText) {
+  const a = oldText.split(/\s+/).filter(Boolean);
+  const b = newText.split(/\s+/).filter(Boolean);
+  const m = Array.from({length: a.length + 1}, () => Array(b.length + 1).fill(0));
+
+  for (let i = a.length - 1; i >= 0; i--) {
+    for (let j = b.length - 1; j >= 0; j--) {
+      if (a[i] === b[j]) m[i][j] = m[i+1][j+1] + 1;
+      else m[i][j] = Math.max(m[i+1][j], m[i][j+1]);
+    }
+  }
+
+  let i = 0, j = 0;
+  const left = [], right = [];
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      left.push(a[i]);
+      right.push(b[j]);
+      i++; j++;
+    } else if (m[i+1][j] >= m[i][j+1]) {
+      left.push(`<span class="del">${a[i]}</span>`);
+      i++;
+    } else {
+      right.push(`<span class="ins">${b[j]}</span>`);
+      j++;
+    }
+  }
+  while (i < a.length) left.push(`<span class="del">${a[i++]}</span>`);
+  while (j < b.length) right.push(`<span class="ins">${b[j++]}</span>`);
+  return { left: left.join(" "), right: right.join(" ") };
+}
+
+function compareSelected() {
+  if (!selectedDocument) return;
+  const aId = document.getElementById("compareA").value;
+  const bId = document.getElementById("compareB").value;
+  const aVer = selectedDocument.versions.find(v => v.id === aId);
+  const bVer = selectedDocument.versions.find(v => v.id === bId);
+  if (!aVer || !bVer) return;
+  const result = diffWords(stripHTML(aVer.html), stripHTML(bVer.html));
+  document.getElementById("compareLeft").innerHTML = `<strong>${aVer.id}</strong><hr>${result.left}`;
+  document.getElementById("compareRight").innerHTML = `<strong>${bVer.id}</strong><hr>${result.right}`;
+}
+
+function exportAudit() {
+  if (!selectedProcess || !selectedDocument) {
+    alert("Selecione um processo e documento antes de exportar.");
+    return;
+  }
+  const d = selectedDocument;
+  const md = [
+    `# Relatório de Auditoria de Documento`,
+    ``,
+    `## Processo`,
+    `- Número: ${selectedProcess.number}`,
+    `- Classe: ${selectedProcess.class}`,
+    ``,
+    `## Documento`,
+    `- ID: ${d.id}`,
+    `- Título: ${d.title}`,
+    `- Tipo: ${d.type}`,
+    ``,
+    `## Situações (timeline)`,
+    ...d.situations.map(s => `- ${s.date} | ${s.status} | ${s.user} | versão: ${s.versionId || "n/a"}`),
+    ``,
+    `## Permissões atuais`,
+    ...d.currentPermissions.map(p => `- ${p.user} (${p.role}): ${p.perms.join(", ")}`),
+    ``,
+    `## Histórico de concessões`,
+    ...d.grantHistory.map(g => `- ${g.date} | ${g.actor} -> ${g.target} | ${g.action} ${g.permission}`),
+    ``,
+    `## Logs de acesso`,
+    ...d.accessLogs.map(l => `- ${l.date} | ${l.user} | ${l.event} | ${l.detail}`),
+    ``,
+    `## Versões salvas`,
+    ...d.versions.map(v => `- ${v.id} | ${v.date} | ${v.user}`)
+  ].join("\n");
+
+  const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `auditoria-${selectedProcess.number}-${d.id}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById("searchBtn").onclick = () => {
+  const query = document.getElementById("processSearch").value.trim();
+  const filtered = data.processes.filter(p => p.number.includes(query));
+  selectedProcess = filtered[0] || null;
+  selectedDocument = null;
+  renderProcesses(filtered);
+  renderDocuments();
+  clearRight();
+};
+
+docTypeFilter.onchange = renderDocuments;
+document.getElementById("loadVersionBtn").onclick = () => loadVersionById(document.getElementById("versionSelect").value);
+document.getElementById("compareBtn").onclick = compareSelected;
+document.getElementById("exportBtn").onclick = exportAudit;
+
+renderProcesses();
+</script>
+</body>
+</html>
