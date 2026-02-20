@@ -6,17 +6,19 @@
   <title>Protótipo de Auditoria de Documentos</title>
   <style>
     :root {
-      --bg: #f3f5f8;
-      --panel: #ffffff;
-      --text: #1f2937;
-      --muted: #667085;
-      --primary: #1f4f8f;
-      --primary-soft: #e9f0ff;
-      --border: #e4e7ec;
-      --chip-bg: #eef2ff;
-      --chip-text: #3730a3;
-      --shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
-      --radius: 12px;
+      --bg: radial-gradient(circle at 15% 10%, #192b52 0%, #0b1220 42%, #060912 100%);
+      --panel: rgba(12, 24, 46, 0.88);
+      --text: #e2ecff;
+      --muted: #95a3bd;
+      --primary: #26c6ff;
+      --primary-soft: rgba(38, 198, 255, 0.15);
+      --secondary: #a855f7;
+      --accent: #22d3ee;
+      --border: rgba(124, 169, 255, 0.22);
+      --chip-bg: rgba(168, 85, 247, 0.16);
+      --chip-text: #e9d5ff;
+      --shadow: 0 14px 32px rgba(1, 6, 20, 0.45);
+      --radius: 14px;
     }
     * { box-sizing: border-box; }
     body {
@@ -24,6 +26,7 @@
       font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
       color: var(--text);
       background: var(--bg);
+      background-attachment: fixed;
     }
     h1,h2,h3,h4,p { margin: 0; }
     .muted { color: var(--muted); }
@@ -40,6 +43,7 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
     }
 
     .left {
@@ -99,7 +103,7 @@
       border-radius: 9px;
       padding: 8px 10px;
       font-size: 0.85rem;
-      background: #fff;
+      background: rgba(9, 18, 35, 0.9);
       color: var(--text);
     }
     .input, select { width: 100%; }
@@ -109,12 +113,12 @@
       transition: 0.2s ease;
     }
     button.primary {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: #fff;
+      background: linear-gradient(120deg, var(--primary), var(--secondary));
+      border-color: transparent;
+      color: #08101f;
     }
-    button.primary:hover { filter: brightness(1.04); }
-    button.ghost:hover { background: #f8fafc; }
+    button.primary:hover { filter: brightness(1.1); }
+    button.ghost:hover { background: rgba(38, 198, 255, 0.12); }
 
     .tour-launch {
       display: inline-flex;
@@ -127,7 +131,7 @@
       border-radius: 10px;
       max-height: 132px;
       overflow: auto;
-      background: #fff;
+      background: rgba(8, 17, 33, 0.74);
     }
     .list-item {
       padding: 8px 10px;
@@ -136,7 +140,7 @@
       font-size: 0.84rem;
     }
     .list-item:last-child { border-bottom: none; }
-    .list-item:hover { background: #f8fafc; }
+    .list-item:hover { background: rgba(38, 198, 255, 0.08); }
     .list-item.active {
       background: var(--primary-soft);
       border-left: 3px solid var(--primary);
@@ -155,11 +159,11 @@
       white-space: nowrap;
     }
     .chip .value {
-      background: rgba(31, 79, 143, 0.12);
+      background: rgba(34, 211, 238, 0.18);
       border-radius: 999px;
       padding: 1px 6px;
       font-weight: 700;
-      color: var(--primary);
+      color: #67e8f9;
     }
     .chip-wrap {
       display: flex;
@@ -191,7 +195,7 @@
       border-radius: 10px;
       padding: 10px;
       overflow: auto;
-      background: #fcfcfd;
+      background: rgba(5, 10, 20, 0.7);
       font-size: 0.85rem;
       line-height: 1.35;
       height: 100%;
@@ -213,7 +217,7 @@
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 10px;
-      background: #fff;
+      background: rgba(9, 19, 37, 0.75);
       min-height: 0;
     }
     .section h3 { font-size: 0.88rem; margin-bottom: 8px; }
@@ -253,7 +257,7 @@
       padding-right: 4px;
     }
     .timeline {
-      border-left: 2px solid #dbeafe;
+      border-left: 2px solid rgba(34, 211, 238, 0.5);
       margin-left: 8px;
       padding-left: 10px;
       display: flex;
@@ -270,6 +274,7 @@
       height: 9px;
       border-radius: 50%;
       background: var(--primary);
+      box-shadow: 0 0 0 3px rgba(38, 198, 255, 0.2);
     }
     .timeline-action { font-size: 0.84rem; font-weight: 600; }
     .timeline-item .muted { font-size: 0.75rem; }
@@ -289,7 +294,7 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 0.8rem;
-      background: #fff;
+      background: rgba(9, 19, 37, 0.75);
     }
     th, td {
       border-bottom: 1px solid var(--border);
@@ -304,7 +309,7 @@
       font-weight: 600;
       position: sticky;
       top: 0;
-      background: #fff;
+      background: rgba(11, 23, 44, 0.98);
     }
     tr:last-child td { border-bottom: none; }
 
@@ -330,8 +335,8 @@
       font-size: 0.82rem;
     }
     .legend { font-size: .78rem; color: var(--muted); }
-    .ins { background: #dcfce7; color: #065f46; padding: 1px 3px; border-radius: 4px; }
-    .del { background: #fee2e2; color: #7f1d1d; text-decoration: line-through; padding: 1px 3px; border-radius: 4px; }
+        .ins { background: rgba(52, 211, 153, 0.22); color: #6ee7b7; padding: 1px 3px; border-radius: 4px; }
+    .del { background: rgba(251, 113, 133, 0.22); color: #fda4af; text-decoration: line-through; padding: 1px 3px; border-radius: 4px; }
 
     .tutorial-overlay {
       position: fixed;
@@ -355,7 +360,7 @@
     .tutorial-tooltip {
       position: fixed;
       max-width: 340px;
-      background: #fff;
+      background: rgba(7, 15, 31, 0.95);
       border: 1px solid var(--border);
       border-radius: 12px;
       box-shadow: 0 16px 36px rgba(2, 6, 23, 0.2);
@@ -389,8 +394,8 @@
 <div class="app">
   <aside class="panel left">
     <div class="title-block">
-      <h1>Auditoria de Documentos</h1>
-      <div class="muted">Visão compacta com foco em histórico e versões</div>
+      <h1>Auditoria da Segurança da Informação</h1>
+      <div class="muted">Painel tecnológico com foco em rastreabilidade, conformidade e risco</div>
     </div>
 
     <div class="stack">
