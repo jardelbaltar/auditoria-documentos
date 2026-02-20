@@ -55,18 +55,32 @@
       min-height: calc(100vh - 28px);
     }
 
-    .right-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 3fr) minmax(240px, 1fr);
+    .main-frame {
+      display: flex;
+      flex-direction: column;
       gap: 10px;
-      align-items: start;
+      min-height: calc(100vh - 56px);
+    }
+
+    .top-half {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 1fr);
+      gap: 10px;
+    }
+
+    .left-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 0;
+      overflow: auto;
+      padding-right: 2px;
     }
 
     .current-version {
-      position: sticky;
-      top: 0;
-      min-height: calc((100vh - 56px) / 2);
-      max-height: calc(100vh - 56px);
+      min-height: 0;
     }
 
     .current-version .doc-html {
@@ -189,11 +203,6 @@
     .topbar h2 { font-size: 1rem; }
     .topbar .muted { font-size: 0.82rem; }
 
-    .grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-      gap: 10px;
-    }
     .section {
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -202,6 +211,35 @@
       min-height: 0;
     }
     .section h3 { font-size: 0.88rem; margin-bottom: 8px; }
+
+    details.section {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .section summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    .section summary::-webkit-details-marker { display: none; }
+    .section summary::after {
+      content: "▸";
+      font-size: 0.8rem;
+      color: var(--muted);
+      transition: transform 0.2s ease;
+    }
+    details[open] > summary::after { transform: rotate(90deg); }
+
+    .section-body {
+      padding: 0 10px 10px;
+    }
 
     .timeline-shell {
       max-height: 270px;
@@ -264,7 +302,12 @@
     }
     tr:last-child td { border-bottom: none; }
 
-    .full-width { grid-column: 1 / -1; }
+    .bottom-half {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
     .compare-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -288,14 +331,11 @@
       .app { grid-template-columns: 1fr; }
       .left, .right { min-height: auto; }
       .preview-panel { min-height: 220px; }
-      .grid { grid-template-columns: 1fr; }
-      .right-layout { grid-template-columns: 1fr; }
+      .top-half { grid-template-columns: 1fr; }
       .current-version {
-        position: static;
-        min-height: auto;
-        max-height: none;
+        min-height: 220px;
       }
-      .full-width { grid-column: auto; }
+      .bottom-half { min-height: 280px; }
     }
   </style>
 </head>
@@ -336,7 +376,7 @@
   </aside>
 
   <main class="panel right">
-    <div class="right-layout">
+    <div class="main-frame">
       <div>
         <div class="topbar">
           <div>
@@ -347,74 +387,84 @@
         </div>
 
         <div id="stats" class="chip-wrap"></div>
-
-        <div class="grid">
-          <section class="section">
-            <h3>Timeline de situações do documento</h3>
-            <div class="timeline-shell">
-              <div id="timeline" class="timeline"></div>
-            </div>
-          </section>
-
-          <section class="section">
-            <h3>Permissões atuais</h3>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr><th>Usuário</th><th>Perfil</th><th>Permissões</th></tr>
-                </thead>
-                <tbody id="permissionsTable"></tbody>
-              </table>
-            </div>
-          </section>
-
-          <section class="section">
-            <h3>Histórico de concessões/revogações</h3>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr><th>Data</th><th>Responsável</th><th>Usuário alvo</th><th>Ação</th><th>Permissão</th></tr>
-                </thead>
-                <tbody id="grantHistoryTable"></tbody>
-              </table>
-            </div>
-          </section>
-
-          <section class="section">
-            <h3>Logs de acesso (fora da timeline)</h3>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr><th>Data</th><th>Usuário</th><th>Evento</th><th>Detalhe</th></tr>
-                </thead>
-                <tbody id="accessLogsTable"></tbody>
-              </table>
-            </div>
-          </section>
-
-          <section class="section full-width">
-            <h3>Comparação entre duas versões</h3>
-            <div class="row" style="margin-bottom: 8px; flex-wrap: wrap;">
-              <select id="compareA"></select>
-              <select id="compareB"></select>
-              <button id="compareBtn" class="primary">Comparar versões</button>
-            </div>
-            <div class="legend">Legenda: <span class="ins">inserido</span> <span class="del">removido</span></div>
-            <div class="compare-grid">
-              <div class="diff-box" id="compareLeft"></div>
-              <div class="diff-box" id="compareRight"></div>
-            </div>
-          </section>
-        </div>
       </div>
 
-      <section class="preview-panel current-version">
-        <div class="preview-head">
-          <h3>Última versão do documento</h3>
-          <span id="leftPreviewVersion" class="chip">sem versão</span>
+      <div class="top-half">
+        <div class="left-stack">
+          <details class="section" open>
+            <summary>Timeline de situações do documento</summary>
+            <div class="section-body">
+              <div class="timeline-shell">
+                <div id="timeline" class="timeline"></div>
+              </div>
+            </div>
+          </details>
+
+          <details class="section">
+            <summary>Permissões atuais</summary>
+            <div class="section-body">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Usuário</th><th>Perfil</th><th>Permissões</th></tr>
+                  </thead>
+                  <tbody id="permissionsTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+
+          <details class="section">
+            <summary>Histórico de concessões/revogações</summary>
+            <div class="section-body">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Data</th><th>Responsável</th><th>Usuário alvo</th><th>Ação</th><th>Permissão</th></tr>
+                  </thead>
+                  <tbody id="grantHistoryTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+
+          <details class="section">
+            <summary>Logs de acesso (fora da timeline)</summary>
+            <div class="section-body">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Data</th><th>Usuário</th><th>Evento</th><th>Detalhe</th></tr>
+                  </thead>
+                  <tbody id="accessLogsTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </details>
         </div>
-        <div id="leftPreviewMeta" class="preview-meta">Selecione um documento para visualizar o conteúdo.</div>
-        <div id="leftDocPreview" class="doc-html"></div>
+
+        <section class="preview-panel current-version">
+          <div class="preview-head">
+            <h3>Última versão do documento</h3>
+            <span id="leftPreviewVersion" class="chip">sem versão</span>
+          </div>
+          <div id="leftPreviewMeta" class="preview-meta">Selecione um documento para visualizar o conteúdo.</div>
+          <div id="leftDocPreview" class="doc-html"></div>
+        </section>
+      </div>
+
+      <section class="section bottom-half">
+        <h3>Comparação entre duas versões</h3>
+        <div class="row" style="margin-bottom: 8px; flex-wrap: wrap;">
+          <select id="compareA"></select>
+          <select id="compareB"></select>
+          <button id="compareBtn" class="primary">Comparar versões</button>
+        </div>
+        <div class="legend">Legenda: <span class="ins">inserido</span> <span class="del">removido</span></div>
+        <div class="compare-grid">
+          <div class="diff-box" id="compareLeft"></div>
+          <div class="diff-box" id="compareRight"></div>
+        </div>
       </section>
     </div>
   </main>
