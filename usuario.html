@@ -23,6 +23,19 @@
       --radius: 14px;
     }
 
+    :root[data-theme="light"] {
+      --bg: #eef2f8;
+      --panel: #f8fafc;
+      --text: #0f172a;
+      --muted: #475569;
+      --surface-1: #ffffff;
+      --surface-2: #ffffff;
+      --surface-3: #f8fafc;
+      --table-head: #eef2f7;
+      --border: rgba(100, 116, 139, 0.35);
+      --shadow: 0 14px 32px rgba(15, 23, 42, 0.16);
+    }
+
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -66,6 +79,33 @@
 
     .title-block h1 { font-size: 1.06rem; }
     .title-block p { font-size: 0.83rem; margin-top: 3px; }
+
+    .row-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    button {
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 8px 10px;
+      font-size: 0.82rem;
+      background: var(--surface-2);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s ease;
+    }
+
+    button:hover { filter: brightness(1.04); }
+
+    .tour-launch {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
 
     .section {
       border: 1px solid var(--border);
@@ -185,6 +225,46 @@
 
     tr:last-child td { border-bottom: none; }
 
+    .tutorial-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.52);
+      z-index: 999;
+    }
+
+    .tutorial-overlay.hidden,
+    .tutorial-tooltip.hidden { display: none; }
+
+    .tutorial-highlight {
+      position: relative;
+      z-index: 1001 !important;
+      outline: 3px solid #f59e0b;
+      border-radius: 10px;
+      box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.22);
+      scroll-margin: 24px;
+    }
+
+    .tutorial-tooltip {
+      position: fixed;
+      max-width: 340px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 16px 36px rgba(2, 6, 23, 0.2);
+      padding: 12px;
+      z-index: 1002;
+    }
+
+    .tutorial-tooltip h4 { font-size: 0.92rem; margin-bottom: 6px; }
+    .tutorial-tooltip p { font-size: 0.82rem; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
+    .tutorial-progress { font-size: 0.74rem; color: var(--muted); margin-bottom: 8px; }
+    .tutorial-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .tutorial-actions button { flex: 1; }
+
     @media (max-width: 1200px) {
       .app { grid-template-columns: 1fr; }
       .row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -199,7 +279,12 @@
         <p class="muted">Protótipo espelhando o estilo da auditoria de documentos.</p>
       </div>
 
-      <section class="section">
+      <div class="row-inline">
+        <button id="themeBtn" title="Alternar tema">☀️ Tema claro</button>
+        <button id="tutorialBtn" class="tour-launch">✨ Tutorial guiado</button>
+      </div>
+
+      <section id="perfilMonitorado" class="section">
         <h3>Perfil monitorado</h3>
         <div class="list">
           <div class="list-item">
@@ -210,7 +295,7 @@
         </div>
       </section>
 
-      <section class="section">
+      <section id="concessoesAcesso" class="section">
         <h3>Concessões de acesso</h3>
         <div class="list">
           <div class="list-item">
@@ -230,7 +315,7 @@
     </aside>
 
     <section class="panel right">
-      <section class="section">
+      <section id="painelConsolidado" class="section">
         <h2>Painel consolidado do usuário <span class="badge warning">Monitoramento ativo</span></h2>
         <p class="muted" style="margin-top: 4px;">Resumo de movimentação processual, documentos trabalhados, peças visualizadas e ações críticas executadas.</p>
 
@@ -254,7 +339,7 @@
         </div>
       </section>
 
-      <section class="section">
+      <section id="movimentacaoRecente" class="section">
         <h3>Movimentação processual recente</h3>
         <table>
           <thead>
@@ -288,7 +373,7 @@
         </table>
       </section>
 
-      <section class="section">
+      <section id="documentosTrabalhados" class="section">
         <h3>Documentos trabalhados e peças visualizadas</h3>
         <div class="filter-bar">
           <label for="filtro-processo">Filtrar trabalho por processo:</label>
@@ -335,7 +420,7 @@
         </table>
       </section>
 
-      <section class="section">
+      <section id="acoesCriticas" class="section">
         <h3>Painel de ações críticas</h3>
         <table>
           <thead>
@@ -371,9 +456,78 @@
     </section>
   </main>
 
+  <div id="tutorialOverlay" class="tutorial-overlay hidden"></div>
+  <div id="tutorialTooltip" class="tutorial-tooltip hidden">
+    <div id="tutorialProgress" class="tutorial-progress"></div>
+    <h4 id="tutorialTitle"></h4>
+    <p id="tutorialText"></p>
+    <div class="tutorial-actions">
+      <button id="tutorialPrev">Anterior</button>
+      <button id="tutorialNext">Próximo</button>
+      <button id="tutorialClose">Fechar</button>
+    </div>
+  </div>
+
   <script>
+    const themeBtn = document.getElementById('themeBtn');
+    const THEME_STORAGE_KEY = 'auditoria-theme';
     const filtroProcesso = document.getElementById('filtro-processo');
     const linhasTrabalhoUsuario = document.querySelectorAll('#tabela-trabalho-usuario tr');
+    const tutorialOverlay = document.getElementById('tutorialOverlay');
+    const tutorialTooltip = document.getElementById('tutorialTooltip');
+
+    let tutorialIndex = -1;
+    let highlightedEl = null;
+
+    function applyTheme(theme) {
+      const resolvedTheme = theme === 'dark' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', resolvedTheme);
+      themeBtn.textContent = resolvedTheme === 'light' ? '☀️ Tema claro' : '🌙 Tema escuro';
+    }
+
+    function initTheme() {
+      const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+      applyTheme(storedTheme || 'light');
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = current === 'light' ? 'dark' : 'light';
+      applyTheme(next);
+      localStorage.setItem(THEME_STORAGE_KEY, next);
+    }
+
+    const tutorialSteps = [
+      {
+        selector: '#perfilMonitorado',
+        title: '1) Perfil monitorado',
+        text: 'Este bloco reúne os dados principais do servidor auditado, incluindo matrícula, perfil e último acesso.'
+      },
+      {
+        selector: '#concessoesAcesso',
+        title: '2) Concessões de acesso',
+        text: 'Aqui você acompanha permissões recebidas, compartilhamentos concedidos e revogações recentes.'
+      },
+      {
+        selector: '#painelConsolidado',
+        title: '3) Painel consolidado',
+        text: 'Os indicadores resumem movimentações, documentos trabalhados, peças visualizadas e ações críticas.'
+      },
+      {
+        selector: '#documentosTrabalhados',
+        title: '4) Filtro por processo',
+        text: 'Use o filtro para exibir apenas o trabalho vinculado a um processo específico.',
+        onEnter: () => {
+          filtroProcesso.value = '0051200-21.2023.8.26.0100';
+          filtroProcesso.dispatchEvent(new Event('change'));
+        }
+      },
+      {
+        selector: '#acoesCriticas',
+        title: '5) Ações críticas',
+        text: 'Esta tabela destaca eventos sensíveis e ajuda na priorização de apurações.'
+      }
+    ];
 
     filtroProcesso.addEventListener('change', () => {
       const processoSelecionado = filtroProcesso.value;
@@ -384,6 +538,89 @@
         linha.style.display = deveExibir ? '' : 'none';
       });
     });
+
+    function clearTutorialHighlight() {
+      if (highlightedEl) highlightedEl.classList.remove('tutorial-highlight');
+      highlightedEl = null;
+    }
+
+    function startTutorial() {
+      tutorialOverlay.classList.remove('hidden');
+      tutorialTooltip.classList.remove('hidden');
+      showTutorialStep(0);
+    }
+
+    function stopTutorial() {
+      tutorialIndex = -1;
+      tutorialOverlay.classList.add('hidden');
+      tutorialTooltip.classList.add('hidden');
+      clearTutorialHighlight();
+      filtroProcesso.value = 'todos';
+      filtroProcesso.dispatchEvent(new Event('change'));
+    }
+
+    function prevTutorialStep() {
+      if (tutorialIndex <= 0) return;
+      showTutorialStep(tutorialIndex - 1);
+    }
+
+    function nextTutorialStep() {
+      if (tutorialIndex >= tutorialSteps.length - 1) {
+        stopTutorial();
+        return;
+      }
+      showTutorialStep(tutorialIndex + 1);
+    }
+
+    function showTutorialStep(index) {
+      tutorialIndex = index;
+      const step = tutorialSteps[index];
+      if (!step) return;
+      if (step.onEnter) step.onEnter();
+
+      clearTutorialHighlight();
+      const element = document.querySelector(step.selector);
+      if (!element) return;
+      highlightedEl = element;
+      element.classList.add('tutorial-highlight');
+      element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+
+      document.getElementById('tutorialProgress').textContent = `Passo ${index + 1} de ${tutorialSteps.length}`;
+      document.getElementById('tutorialTitle').textContent = step.title;
+      document.getElementById('tutorialText').textContent = step.text;
+      document.getElementById('tutorialPrev').disabled = index === 0;
+      document.getElementById('tutorialNext').textContent = index === tutorialSteps.length - 1 ? 'Finalizar' : 'Próximo';
+
+      const rect = element.getBoundingClientRect();
+      const tooltipRect = tutorialTooltip.getBoundingClientRect();
+      const margin = 12;
+
+      let top = rect.bottom + margin;
+      if (top + tooltipRect.height > window.innerHeight - margin) {
+        top = rect.top - tooltipRect.height - margin;
+      }
+      top = Math.max(margin, top);
+
+      let left = rect.left;
+      if (left + tooltipRect.width > window.innerWidth - margin) {
+        left = window.innerWidth - tooltipRect.width - margin;
+      }
+      left = Math.max(margin, left);
+
+      tutorialTooltip.style.top = `${top}px`;
+      tutorialTooltip.style.left = `${left}px`;
+    }
+
+    document.getElementById('tutorialBtn').onclick = startTutorial;
+    themeBtn.onclick = toggleTheme;
+    document.getElementById('tutorialPrev').onclick = prevTutorialStep;
+    document.getElementById('tutorialNext').onclick = nextTutorialStep;
+    document.getElementById('tutorialClose').onclick = stopTutorial;
+    window.addEventListener('resize', () => {
+      if (tutorialIndex >= 0) showTutorialStep(tutorialIndex);
+    });
+
+    initTheme();
   </script>
 </body>
 </html>
