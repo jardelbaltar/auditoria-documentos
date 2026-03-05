@@ -136,6 +136,28 @@
     .list-item strong { font-size: 0.84rem; }
     .list-item p { margin-top: 2px; color: var(--muted); }
 
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin: 8px 0 10px;
+    }
+
+    .filter-bar label {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .filter-bar select {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 8px;
+      min-width: 240px;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -268,29 +290,42 @@
 
       <section class="section">
         <h3>Documentos trabalhados e peças visualizadas</h3>
+        <div class="filter-bar">
+          <label for="filtro-processo">Filtrar trabalho por processo:</label>
+          <select id="filtro-processo">
+            <option value="todos">Todos os processos</option>
+            <option value="0004321-88.2024.8.26.0100">0004321-88.2024.8.26.0100</option>
+            <option value="0051200-21.2023.8.26.0100">0051200-21.2023.8.26.0100</option>
+            <option value="0019984-77.2022.8.26.0100">0019984-77.2022.8.26.0100</option>
+          </select>
+        </div>
         <table>
           <thead>
             <tr>
+              <th>Processo</th>
               <th>Tipo</th>
               <th>Referência</th>
               <th>Operação</th>
               <th>Horário</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
+          <tbody id="tabela-trabalho-usuario">
+            <tr data-processo="0004321-88.2024.8.26.0100">
+              <td>0004321-88.2024.8.26.0100</td>
               <td>Documento</td>
               <td>Minuta de decisão #MD-4492</td>
               <td>Edição e assinatura</td>
               <td>10/03/2026 10:56</td>
             </tr>
-            <tr>
+            <tr data-processo="0051200-21.2023.8.26.0100">
+              <td>0051200-21.2023.8.26.0100</td>
               <td>Peça processual</td>
               <td>Contestação - evento 83</td>
               <td>Visualização integral</td>
               <td>10/03/2026 10:07</td>
             </tr>
-            <tr>
+            <tr data-processo="0019984-77.2022.8.26.0100">
+              <td>0019984-77.2022.8.26.0100</td>
               <td>Documento</td>
               <td>Despacho #DP-2214</td>
               <td>Revisão de conteúdo</td>
@@ -335,5 +370,20 @@
       </section>
     </section>
   </main>
+
+  <script>
+    const filtroProcesso = document.getElementById('filtro-processo');
+    const linhasTrabalhoUsuario = document.querySelectorAll('#tabela-trabalho-usuario tr');
+
+    filtroProcesso.addEventListener('change', () => {
+      const processoSelecionado = filtroProcesso.value;
+
+      linhasTrabalhoUsuario.forEach((linha) => {
+        const processoLinha = linha.dataset.processo;
+        const deveExibir = processoSelecionado === 'todos' || processoLinha === processoSelecionado;
+        linha.style.display = deveExibir ? '' : 'none';
+      });
+    });
+  </script>
 </body>
 </html>
