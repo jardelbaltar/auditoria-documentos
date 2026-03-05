@@ -359,6 +359,20 @@
       gap: 8px;
       margin-top: 8px;
     }
+    .compare-select-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .compare-select-grid select {
+      width: 100%;
+    }
+    .compare-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 8px;
+    }
     .diff-box {
       border: 1px solid var(--border);
       border-radius: 9px;
@@ -421,6 +435,16 @@
         min-height: 220px;
       }
       .bottom-half { min-height: 280px; }
+      .compare-select-grid,
+      .compare-grid {
+        grid-template-columns: 1fr;
+      }
+      .compare-actions {
+        justify-content: stretch;
+      }
+      .compare-actions button {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -544,9 +568,11 @@
 
       <section class="section bottom-half">
         <h3>Comparação entre duas versões</h3>
-        <div class="row" style="margin-bottom: 8px; flex-wrap: wrap;">
+        <div class="compare-select-grid">
           <select id="compareA"></select>
           <select id="compareB"></select>
+        </div>
+        <div class="compare-actions">
           <button id="compareBtn" class="primary">Comparar versões</button>
         </div>
         <div class="legend">Legenda: <span class="ins">inserido</span> <span class="del">removido</span></div>
