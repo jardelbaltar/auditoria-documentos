@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Protótipo de Auditoria de Usuários</title>
+  <style>
+    :root {
+      --bg: #10192d;
+      --panel: #17243d;
+      --text: #e4ebf7;
+      --muted: #9aaac4;
+      --surface-1: #16243d;
+      --surface-2: #1b2a45;
+      --surface-3: #15223a;
+      --table-head: #1d2d4a;
+      --primary: #5a7fc8;
+      --border: rgba(149, 174, 220, 0.3);
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --ok: #22c55e;
+      --shadow: 0 14px 32px rgba(1, 6, 20, 0.45);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 14px;
+      min-height: 100vh;
+      padding: 14px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .left {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .right {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: auto;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    .muted { color: var(--muted); }
+
+    .title-block h1 { font-size: 1.06rem; }
+    .title-block p { font-size: 0.83rem; margin-top: 3px; }
+
+    .section {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      background: var(--surface-1);
+    }
+
+    .section h3 {
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .kpi {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px;
+    }
+
+    .kpi-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .kpi-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 0.72rem;
+      border: 1px solid transparent;
+      margin-left: 6px;
+    }
+
+    .badge.ok { color: var(--ok); border-color: rgba(34, 197, 94, 0.35); }
+    .badge.warning { color: var(--warning); border-color: rgba(245, 158, 11, 0.35); }
+    .badge.danger { color: var(--danger); border-color: rgba(239, 68, 68, 0.35); }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      max-height: 220px;
+      overflow: auto;
+    }
+
+    .list-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: var(--surface-2);
+      font-size: 0.83rem;
+    }
+
+    .list-item strong { font-size: 0.84rem; }
+    .list-item p { margin-top: 2px; color: var(--muted); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--table-head);
+      font-weight: 600;
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    @media (max-width: 1200px) {
+      .app { grid-template-columns: 1fr; }
+      .row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="panel left">
+      <div class="title-block">
+        <h1>Auditoria de Usuário</h1>
+        <p class="muted">Protótipo espelhando o estilo da auditoria de documentos.</p>
+      </div>
+
+      <section class="section">
+        <h3>Perfil monitorado</h3>
+        <div class="list">
+          <div class="list-item">
+            <strong>Renata Almeida Nunes</strong>
+            <p>Matrícula: 12984 • Perfil: Servidor Analista</p>
+            <p>Unidade: 3ª Vara Cível • Último acesso: 10/03/2026 14:22</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h3>Concessões de acesso</h3>
+        <div class="list">
+          <div class="list-item">
+            <strong>Recebidas</strong>
+            <p>6 permissões temporárias nas últimas 72h.</p>
+          </div>
+          <div class="list-item">
+            <strong>Concedidas</strong>
+            <p>4 compartilhamentos para apoio em mutirão.</p>
+          </div>
+          <div class="list-item">
+            <strong>Revogações</strong>
+            <p>2 revogações manuais por encerramento de tarefa.</p>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <section class="panel right">
+      <section class="section">
+        <h2>Painel consolidado do usuário <span class="badge warning">Monitoramento ativo</span></h2>
+        <p class="muted" style="margin-top: 4px;">Resumo de movimentação processual, documentos trabalhados, peças visualizadas e ações críticas executadas.</p>
+
+        <div class="row" style="margin-top: 10px;">
+          <article class="kpi">
+            <div class="kpi-label">Movimentações processuais</div>
+            <div class="kpi-value">47</div>
+          </article>
+          <article class="kpi">
+            <div class="kpi-label">Documentos trabalhados</div>
+            <div class="kpi-value">28</div>
+          </article>
+          <article class="kpi">
+            <div class="kpi-label">Peças visualizadas</div>
+            <div class="kpi-value">65</div>
+          </article>
+          <article class="kpi">
+            <div class="kpi-label">Ações críticas</div>
+            <div class="kpi-value">5</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <h3>Movimentação processual recente</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Data/Hora</th>
+              <th>Processo</th>
+              <th>Ação</th>
+              <th>Resultado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>10/03/2026 13:11</td>
+              <td>0004321-88.2024.8.26.0100</td>
+              <td>Juntada de petição intermediária</td>
+              <td><span class="badge ok">Concluída</span></td>
+            </tr>
+            <tr>
+              <td>10/03/2026 11:42</td>
+              <td>0051200-21.2023.8.26.0100</td>
+              <td>Retificação de classe processual</td>
+              <td><span class="badge warning">Em validação</span></td>
+            </tr>
+            <tr>
+              <td>09/03/2026 17:30</td>
+              <td>0019984-77.2022.8.26.0100</td>
+              <td>Intimação eletrônica expedida</td>
+              <td><span class="badge ok">Concluída</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h3>Documentos trabalhados e peças visualizadas</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Referência</th>
+              <th>Operação</th>
+              <th>Horário</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Documento</td>
+              <td>Minuta de decisão #MD-4492</td>
+              <td>Edição e assinatura</td>
+              <td>10/03/2026 10:56</td>
+            </tr>
+            <tr>
+              <td>Peça processual</td>
+              <td>Contestação - evento 83</td>
+              <td>Visualização integral</td>
+              <td>10/03/2026 10:07</td>
+            </tr>
+            <tr>
+              <td>Documento</td>
+              <td>Despacho #DP-2214</td>
+              <td>Revisão de conteúdo</td>
+              <td>09/03/2026 16:49</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h3>Painel de ações críticas</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Evento</th>
+              <th>Contexto</th>
+              <th>Nível</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Concessão extraordinária de perfil</td>
+              <td>Acesso de escrita liberado para gabinete auxiliar</td>
+              <td><span class="badge warning">Alto</span></td>
+              <td>Justificado</td>
+            </tr>
+            <tr>
+              <td>Exportação de autos sigilosos</td>
+              <td>Processo com restrição de visualização temporária</td>
+              <td><span class="badge danger">Crítico</span></td>
+              <td>Em apuração</td>
+            </tr>
+            <tr>
+              <td>Revogação manual de acesso</td>
+              <td>Permissão encerrada antes do prazo previsto</td>
+              <td><span class="badge warning">Alto</span></td>
+              <td>Concluído</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+  </main>
+</body>
+</html>
