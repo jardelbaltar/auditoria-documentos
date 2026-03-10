@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monitor de Sessões Virtuais - STJ</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --panel: #ffffff;
+      --text: #0f1f38;
+      --muted: #5f6e84;
+      --primary: #184ea6;
+      --primary-soft: #e8f0ff;
+      --success: #1c7f46;
+      --warning: #b06b00;
+      --danger: #a32136;
+      --border: #d8e1ef;
+      --shadow: 0 10px 26px rgba(16, 31, 58, 0.08);
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: #0f2a54;
+      color: #ecf3ff;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.05rem;
+      line-height: 1.25;
+    }
+
+    .brand p {
+      margin: 6px 0 0;
+      color: #afc3eb;
+      font-size: 0.85rem;
+    }
+
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .menu button {
+      width: 100%;
+      text-align: left;
+      border: 1px solid rgba(180, 201, 237, 0.3);
+      background: rgba(255, 255, 255, 0.06);
+      color: #ecf3ff;
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .menu button.active { background: rgba(255, 255, 255, 0.18); }
+
+    .content {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .header h2 {
+      margin: 0;
+      font-size: 1.35rem;
+    }
+
+    .header p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .tag {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: 1px solid #cbdcff;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .card h3 {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .card strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 1.4rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(320px, 1fr);
+      gap: 12px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .panel-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 8px;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    tr:hover { background: #f8faff; }
+    tr.selected { background: #eef4ff; }
+
+    .status {
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 4px 8px;
+      display: inline-flex;
+    }
+
+    .status.ok { color: var(--success); background: #e5f5ec; }
+    .status.pend { color: var(--warning); background: #fff4df; }
+    .status.alerta { color: var(--danger); background: #fde8ec; }
+
+    .muted { color: var(--muted); }
+
+    .session-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .meta-item {
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      padding: 8px;
+      background: #fbfdff;
+      font-size: 0.85rem;
+    }
+
+    .checklist {
+      margin: 8px 0 12px;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 190px;
+      overflow: auto;
+    }
+
+    .checklist li {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px;
+      font-size: 0.84rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      background: #fcfdff;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    button.action {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      padding: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button.primary {
+      border-color: #1f5fc7;
+      background: #1f5fc7;
+      color: #fff;
+    }
+
+    .log {
+      margin-top: 10px;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      max-height: 100px;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>Painel de Sessões Virtuais</h1>
+        <p>Prototipação - STJ</p>
+      </div>
+
+      <div class="menu">
+        <button class="active">Monitoramento geral</button>
+        <button>Inicializações</button>
+        <button>Finalizações</button>
+        <button>Execução manual</button>
+        <button>Histórico e auditoria</button>
+      </div>
+
+      <p style="margin-top:auto;font-size:0.8rem;color:#afc3eb;">
+        Dica: selecione uma sessão para habilitar as ações manuais.
+      </p>
+    </aside>
+
+    <main class="content">
+      <section class="header">
+        <div>
+          <h2>Dashboard de Inicialização e Finalização</h2>
+          <p>Acompanhamento das rotinas automáticas por órgão julgador e suporte a execução manual.</p>
+        </div>
+        <span class="tag">Ambiente de protótipo</span>
+      </section>
+
+      <section class="cards">
+        <article class="card">
+          <h3>Sessões hoje</h3>
+          <strong>14</strong>
+        </article>
+        <article class="card">
+          <h3>Inicializações concluídas</h3>
+          <strong>11</strong>
+        </article>
+        <article class="card">
+          <h3>Finalizações concluídas</h3>
+          <strong>8</strong>
+        </article>
+        <article class="card">
+          <h3>Alertas pendentes</h3>
+          <strong>3</strong>
+        </article>
+      </section>
+
+      <section class="grid">
+        <article class="panel">
+          <div class="panel-title">
+            <h3>Sessões mapeadas da semana</h3>
+            <small class="muted">Clique em uma linha para detalhes e operação manual</small>
+          </div>
+
+          <table id="sessionsTable">
+            <thead>
+              <tr>
+                <th>Órgão julgador</th>
+                <th>Dia</th>
+                <th>Horário</th>
+                <th>Inicialização</th>
+                <th>Finalização</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </article>
+
+        <article class="panel">
+          <div class="panel-title">
+            <h3 id="selectedTitle">Nenhuma sessão selecionada</h3>
+            <span class="status pend" id="sessionStatus">Aguardando seleção</span>
+          </div>
+
+          <div class="session-meta" id="sessionMeta">
+            <div class="meta-item">Selecione uma sessão para visualizar metadados.</div>
+          </div>
+
+          <h4>Etapas de inicialização</h4>
+          <ul class="checklist" id="initChecklist"></ul>
+
+          <h4>Etapas de finalização</h4>
+          <ul class="checklist" id="endChecklist"></ul>
+
+          <div class="actions">
+            <button class="action primary" id="btnInit">Inicializar sessão (manual)</button>
+            <button class="action" id="btnFinalize">Finalizar sessão (manual)</button>
+            <button class="action" id="btnRetry">Reprocessar etapa pendente</button>
+            <button class="action" id="btnExport">Exportar relatório</button>
+          </div>
+
+          <div class="log" id="actionLog">
+            <span>Log operacional aparecerá aqui...</span>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const data = [
+      {
+        orgao: "Corte Especial",
+        dia: "Segunda",
+        horario: "14:00",
+        init: "Concluída",
+        fim: "Em andamento",
+        relator: "Min. A. Costa",
+        processos: 82,
+        inicioChecklist: [
+          ["Conferir documentos, assinaturas e disponibilizações", true],
+          ["Conferir resultados de julgamento selecionados", true],
+          ["Retirar processos da pauta com indicação do relator", true],
+          ["Lançar termos e fase de julgamento", true],
+          ["Fechar índice", true],
+          ["Gerar Ordem do Dia", true],
+          ["Copiar votação e destaques anteriores", true]
+        ],
+        fimChecklist: [
+          ["Conferir quórum", true],
+          ["Apurar votação", false],
+          ["Retirar processos destacados", false],
+          ["Gerar termo e fase", false],
+          ["Gerar acórdão", false]
+        ]
+      },
+      {
+        orgao: "3ª Turma",
+        dia: "Terça",
+        horario: "10:00",
+        init: "Pendente",
+        fim: "Pendente",
+        relator: "Min. B. Lima",
+        processos: 64,
+        inicioChecklist: [
+          ["Conferir documentos, assinaturas e disponibilizações", false],
+          ["Conferir resultados de julgamento selecionados", false],
+          ["Retirar processos da pauta com indicação do relator", false],
+          ["Lançar termos e fase de julgamento", false],
+          ["Fechar índice", false],
+          ["Gerar Ordem do Dia", false],
+          ["Copiar votação e destaques anteriores", false]
+        ],
+        fimChecklist: [
+          ["Conferir quórum", false],
+          ["Apurar votação", false],
+          ["Retirar processos destacados", false],
+          ["Gerar termo e fase", false],
+          ["Gerar acórdão", false]
+        ]
+      },
+      {
+        orgao: "2ª Seção",
+        dia: "Quarta",
+        horario: "09:00",
+        init: "Concluída",
+        fim: "Concluída",
+        relator: "Min. C. Faria",
+        processos: 40,
+        inicioChecklist: [
+          ["Conferir documentos, assinaturas e disponibilizações", true],
+          ["Conferir resultados de julgamento selecionados", true],
+          ["Retirar processos da pauta com indicação do relator", true],
+          ["Lançar termos e fase de julgamento", true],
+          ["Fechar índice", true],
+          ["Gerar Ordem do Dia", true],
+          ["Copiar votação e destaques anteriores", true]
+        ],
+        fimChecklist: [
+          ["Conferir quórum", true],
+          ["Apurar votação", true],
+          ["Retirar processos destacados", true],
+          ["Gerar termo e fase", true],
+          ["Gerar acórdão", true]
+        ]
+      }
+    ];
+
+    const tbody = document.querySelector("#sessionsTable tbody");
+    const selectedTitle = document.getElementById("selectedTitle");
+    const sessionStatus = document.getElementById("sessionStatus");
+    const sessionMeta = document.getElementById("sessionMeta");
+    const initChecklist = document.getElementById("initChecklist");
+    const endChecklist = document.getElementById("endChecklist");
+    const actionLog = document.getElementById("actionLog");
+    let selectedSession = null;
+
+    const statusClass = (value) => {
+      if (value === "Concluída") return "ok";
+      if (value === "Em andamento") return "alerta";
+      return "pend";
+    };
+
+    function log(message) {
+      actionLog.prepend(Object.assign(document.createElement("span"), {
+        textContent: `${new Date().toLocaleTimeString("pt-BR")} - ${message}`
+      }));
+    }
+
+    function renderChecklist(target, items) {
+      target.innerHTML = "";
+      items.forEach(([label, done]) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<span>${label}</span><span class="status ${done ? "ok" : "pend"}">${done ? "OK" : "Pendente"}</span>`;
+        target.appendChild(li);
+      });
+    }
+
+    function selectSession(index, rowEl) {
+      document.querySelectorAll("tbody tr").forEach((row) => row.classList.remove("selected"));
+      rowEl.classList.add("selected");
+      selectedSession = data[index];
+      selectedTitle.textContent = `${selectedSession.orgao} - ${selectedSession.dia} (${selectedSession.horario})`;
+      sessionStatus.className = `status ${statusClass(selectedSession.init === "Concluída" && selectedSession.fim === "Concluída" ? "Concluída" : selectedSession.fim)}`;
+      sessionStatus.textContent = `Init: ${selectedSession.init} • Fim: ${selectedSession.fim}`;
+      sessionMeta.innerHTML = `
+        <div class="meta-item"><strong>Relator responsável:</strong><br>${selectedSession.relator}</div>
+        <div class="meta-item"><strong>Processos na sessão:</strong><br>${selectedSession.processos}</div>
+      `;
+      renderChecklist(initChecklist, selectedSession.inicioChecklist);
+      renderChecklist(endChecklist, selectedSession.fimChecklist);
+    }
+
+    data.forEach((session, index) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${session.orgao}</td>
+        <td>${session.dia}</td>
+        <td>${session.horario}</td>
+        <td><span class="status ${statusClass(session.init)}">${session.init}</span></td>
+        <td><span class="status ${statusClass(session.fim)}">${session.fim}</span></td>
+      `;
+      tr.addEventListener("click", () => selectSession(index, tr));
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById("btnInit").addEventListener("click", () => {
+      if (!selectedSession) return log("Selecione uma sessão antes de inicializar manualmente.");
+      log(`Inicialização manual solicitada para ${selectedSession.orgao}.`);
+    });
+
+    document.getElementById("btnFinalize").addEventListener("click", () => {
+      if (!selectedSession) return log("Selecione uma sessão antes de finalizar manualmente.");
+      log(`Finalização manual solicitada para ${selectedSession.orgao}.`);
+    });
+
+    document.getElementById("btnRetry").addEventListener("click", () => {
+      if (!selectedSession) return log("Selecione uma sessão para reprocessar etapas pendentes.");
+      log(`Reprocessamento acionado para etapas pendentes da ${selectedSession.orgao}.`);
+    });
+
+    document.getElementById("btnExport").addEventListener("click", () => {
+      if (!selectedSession) return log("Selecione uma sessão para exportar o relatório.");
+      log(`Relatório de auditoria exportado para ${selectedSession.orgao}.`);
+    });
+  </script>
+</body>
+</html>
