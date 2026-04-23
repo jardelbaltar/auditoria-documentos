@@ -490,7 +490,7 @@
         <div class="topbar">
           <div>
             <h2 id="headerTitle">Selecione um processo e documento</h2>
-            <div id="headerSub" class="muted">Acompanhe timeline, permissões, acessos e versões</div>
+            <div id="headerSub" class="muted">Acompanhe timeline, permissões, acessos e conteúdos</div>
           </div>
           <div class="row">
             <button id="themeBtn" class="ghost" title="Alternar tema">🌙 Tema escuro</button>
@@ -558,8 +558,8 @@
 
         <section class="preview-panel current-version">
           <div class="preview-head">
-            <h3>Última versão do documento</h3>
-            <span id="leftPreviewVersion" class="chip">sem versão</span>
+            <h3>Último conteúdo do documento</h3>
+            <span id="leftPreviewVersion" class="chip">sem conteúdo</span>
           </div>
           <div id="leftPreviewMeta" class="preview-meta">Selecione um documento para visualizar o conteúdo.</div>
           <div id="leftDocPreview" class="doc-html"></div>
@@ -567,13 +567,13 @@
       </div>
 
       <section class="section bottom-half">
-        <h3>Comparação entre duas versões</h3>
+        <h3>Comparação entre dois conteúdos</h3>
         <div class="compare-select-grid">
           <select id="compareA"></select>
           <select id="compareB"></select>
         </div>
         <div class="compare-actions">
-          <button id="compareBtn" class="primary">Comparar versões</button>
+          <button id="compareBtn" class="primary">Comparar conteúdos</button>
         </div>
         <div class="legend">Legenda: <span class="ins">inserido</span> <span class="del">removido</span></div>
         <div class="compare-grid">
@@ -651,7 +651,7 @@ function buildDoc(id, type, title, author) {
       { date: "2026-02-14 10:12", user: "helena.costa", event: "Visualização", detail: "Consulta antes de assinar" }
     ],
     situations: [
-      { date: "2026-02-10 10:05", status: "Criação", user: "ana.servidora", versionId: "v1" },
+      { date: "2026-02-10 10:05", status: "Criação", user: "ana.servidora", versionId: "conteúdo" },
       { date: "2026-02-10 14:22", status: "Alteração", user: "ana.servidora", versionId: "v2" },
       { date: "2026-02-11 11:03", status: "Preparo para assinatura", user: "ana.servidora", versionId: "v2" },
       { date: "2026-02-11 16:45", status: "Retirado da assinatura", user: "helena.costa", versionId: "v2" },
@@ -662,7 +662,7 @@ function buildDoc(id, type, title, author) {
     ],
     versions: [
       {
-        id: "v1",
+        id: "conteúdo",
         date: "2026-02-10 10:05",
         user: "ana.servidora",
         html: `<h2>${title}</h2><p>Vistos. Trata-se de análise inicial do pedido formulado nos autos.</p><p>Defiro a tramitação prioritária.</p>`
@@ -745,13 +745,13 @@ const tutorialSteps = [
   {
     selector: "#documentList",
     title: "4) Documentos do processo",
-    text: "Selecione um documento para carregar timeline, permissões, logs e versões comparáveis no painel principal.",
+    text: "Selecione um documento para carregar timeline, permissões, logs e conteúdos comparáveis no painel principal.",
     onEnter: () => ensureDemoSelection()
   },
   {
     selector: "#timeline",
     title: "5) Timeline do documento",
-    text: "A timeline mostra os eventos cronológicos. Os botões 'Abrir vX' permitem abrir rapidamente a versão relacionada a cada evento.",
+    text: "A timeline mostra os eventos cronológicos. Os botões 'Abrir conteúdo' permitem abrir rapidamente o conteúdo relacionado a cada evento.",
     onEnter: () => {
       document.querySelectorAll("details.section").forEach((detail, idx) => {
         if (idx === 0) detail.open = true;
@@ -760,18 +760,18 @@ const tutorialSteps = [
   },
   {
     selector: "#leftDocPreview",
-    title: "6) Visualização da versão",
-    text: "Este quadro exibe o conteúdo da versão ativa. Ao clicar em um item da timeline, o texto é atualizado aqui."
+    title: "6) Visualização do conteúdo",
+    text: "Este quadro exibe o conteúdo ativo. Ao clicar em um item da timeline, o texto é atualizado aqui."
   },
   {
     selector: "#compareBtn",
-    title: "7) Comparar versões",
-    text: "Escolha duas versões nos seletores e clique em 'Comparar versões' para ver trechos inseridos e removidos lado a lado."
+    title: "7) Comparar conteúdos",
+    text: "Escolha dois conteúdos nos seletores e clique em 'Comparar conteúdos' para ver trechos inseridos e removidos lado a lado."
   },
   {
     selector: "#exportBtn",
     title: "8) Exportar auditoria",
-    text: "Quando finalizar a análise, exporte um relatório .md com processo, timeline, permissões, logs e versões."
+    text: "Quando finalizar a análise, exporte um relatório .md com processo, timeline, permissões, logs e conteúdos."
   }
 ];
 
@@ -816,14 +816,14 @@ function renderDocuments() {
 }
 
 function clearPreview() {
-  leftPreviewVersion.textContent = "sem versão";
+  leftPreviewVersion.textContent = "sem conteúdo";
   leftPreviewMeta.textContent = "Selecione um documento para visualizar o conteúdo.";
   leftDocPreview.innerHTML = "";
 }
 
 function clearRight() {
   document.getElementById("headerTitle").textContent = "Selecione um processo e documento";
-  document.getElementById("headerSub").textContent = "Acompanhe timeline, permissões, acessos e versões";
+  document.getElementById("headerSub").textContent = "Acompanhe timeline, permissões, acessos e conteúdos";
   ["stats","timeline","permissionsTable","grantHistoryTable","accessLogsTable","compareA","compareB","compareLeft","compareRight"].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
@@ -839,7 +839,7 @@ function renderRight() {
 
   document.getElementById("stats").innerHTML = `
     <span class="chip">Situações registradas <span class="value">${d.situations.length}</span></span>
-    <span class="chip">Versões armazenadas <span class="value">${d.versions.length}</span></span>
+    <span class="chip">Conteúdos armazenados <span class="value">${d.versions.length}</span></span>
     <span class="chip">Permissões ativas <span class="value">${d.currentPermissions.length}</span></span>
     <span class="chip">Logs de acesso <span class="value">${d.accessLogs.length}</span></span>
   `;
@@ -958,7 +958,7 @@ function exportAudit() {
     `- Tipo: ${d.type}`,
     ``,
     `## Situações (timeline)`,
-    ...d.situations.map(s => `- ${s.date} | ${s.status} | ${s.user} | versão: ${s.versionId || "n/a"}`),
+    ...d.situations.map(s => `- ${s.date} | ${s.status} | ${s.user} | conteúdo: ${s.versionId || "n/a"}`),
     ``,
     `## Permissões atuais`,
     ...d.currentPermissions.map(p => `- ${p.user} (${p.role}): ${p.perms.join(", ")}`),
@@ -969,7 +969,7 @@ function exportAudit() {
     `## Logs de acesso`,
     ...d.accessLogs.map(l => `- ${l.date} | ${l.user} | ${l.event} | ${l.detail}`),
     ``,
-    `## Versões salvas`,
+    `## Conteúdos salvos`,
     ...d.versions.map(v => `- ${v.id} | ${v.date} | ${v.user}`)
   ].join("\n");
 
